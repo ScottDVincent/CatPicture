@@ -17,7 +17,7 @@ using namespace ci;
 using namespace ci::app;
 using namespace std;
 
-class CatProjectApp : public AppBasic {
+class CatPictureApp : public AppBasic {
   public:
 	void setup();
 	void mouseDown( MouseEvent event );	
@@ -29,7 +29,7 @@ private:
 	float clrVar, rndVar; 	
 };
 
-void CatProjectApp::setup()
+void CatPictureApp ::setup()
 {
 	/// initialize vars
 	//brightness = 1.0; 
@@ -37,12 +37,12 @@ void CatProjectApp::setup()
 	rndVar = 0.0f;
 }
 
-void CatProjectApp::mouseDown( MouseEvent event )
+void CatPictureApp::mouseDown( MouseEvent event )
 {
 
 }
 
-void CatProjectApp::update()
+void CatPictureApp::update()
 {
 	/**
 	// prof code
@@ -57,7 +57,7 @@ void CatProjectApp::update()
 	rndVar = Rand::randFloat ( .9f );
 }
 
-void CatProjectApp::draw()
+void CatPictureApp::draw()
 {
 	 // gl::clear( Color( brightness, brightness, brightness ) ); // prof code
 	
@@ -66,4 +66,4 @@ void CatProjectApp::draw()
 	
 }
 
-CINDER_APP_BASIC( CatProjectApp, RendererGl )
+CINDER_APP_BASIC( CatPictureApp, RendererGl )
