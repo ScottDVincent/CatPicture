@@ -11,8 +11,6 @@
  * which means you are free to use, share, and remix it as long as you
  * give attribution. Commercial uses are allowed.
  *
- * @note The code fore creating Textures and Surfaces comes from another
- * of my projects, https://github.com/brinkmwj/CatPicture/blob/master/src/CatPictureApp.cpp
  *
  * @note This project satisfies goals 
  *	A.1 (rectangle), A.2 (circle), B.1 (blur), 
@@ -96,6 +94,15 @@ class CatPictureApp : public AppBasic {
 	 * so I kept it.
 	 */
 	void drawAccident(uint8_t* pixels, int x, int y, int r, Color8u c);
+
+	/**
+	* This method draws a line across the top of the screen
+	*
+	* This satisfies requirement A.1. Start small  and build on minor successes!
+	*/
+	void drawLine (uint8_t* pixels, int rect_width, int rec_height);
+
+
 }; // end public AppBasic
 
 
@@ -104,8 +111,21 @@ void CatPictureApp::prepareSettings(Settings* settings){
 	(*settings).setResizable(false);
 }
 
+
+void CatPictureApp::drawLine(uint8_t* pixels, int rect_width, int rec_height){
+	Color8u c = Color8u(255,0,0);
+
+	for ( int i=0; i<=rect_width-1; i++){
+	pixels [3*i]=0;
+	pixels [3*i+1]=255;
+	pixels [3*i+2]=0;
+	}
+
+}
+
+
 //This function takes about 15.265 ms for 800x600
-void CatPictureApp ::tileWithRectangles(uint8_t* pixels, int x1, int y1, int x2, int y2, int rect_width, int rect_height, Color8u fill1, Color8u border1, Color8u fill2, Color8u border2){
+void CatPictureApp::tileWithRectangles(uint8_t* pixels, int x1, int y1, int x2, int y2, int rect_width, int rect_height, Color8u fill1, Color8u border1, Color8u fill2, Color8u border2){
 	//Figure out the starting and ending coordinates of the rectangle to fill
 	int startx = (x1 < x2) ? x1 : x2;
 	int endx = (x1 < x2) ? x2 : x1;
@@ -266,10 +286,11 @@ void CatPictureApp::setup()
 	//myTexture_ = new gl::Texture(*mySurface_);
 	
 	//Setup for my blur function
-
-	Surface baby_picture(loadImage( loadResource(RES_BABY) ));
-	uint8_t* blur_data = baby_picture.getData();	
+	Surface yose_picture(loadImage( loadResource(RES_YOSE) ));
+	
+	uint8_t* blur_data = yose_picture.getData();	
 	my_blur_pattern_ = new uint8_t[kAppWidth*kAppHeight*3];
+	
 	for(int y=0;y<kAppHeight;y++){
 		for(int x=0;x<kAppWidth;x++){
 			int offset = 3*(x + y*kAppWidth);
@@ -368,15 +389,20 @@ void CatPictureApp::update()
 	Color8u border1 = Color8u(192,192,255);
 	Color8u fill2 = Color8u(192,192,192);
 	Color8u border2 = Color8u(255,255,255);
+
 	//With just this method called, frame rate drops from 54 to 53.5.
 	tileWithRectangles(dataArray, -(frame_number_%14), -(frame_number_%14), 800, 600, 7, 7, fill1, border1, fill2, border2);
 	
+	//line method
+	drawLine (dataArray, 800, 600);
+
 	//With just this method called, frame rate drops from 54 to 11.93
 	selectiveBlur(dataArray, my_blur_pattern_);
 	
-	while(rings_list_.size() > 0 && rings_list_[0].r <= 0) rings_list_.pop_front();
-	while(accident_list_.size() > 0 && accident_list_[0].r <= 0) accident_list_.pop_front();
+	//while(rings_list_.size() > 0 && rings_list_[0].r <= 0) rings_list_.pop_front();
+	//while(accident_list_.size() > 0 && accident_list_[0].r <= 0) accident_list_.pop_front();
 	
+	/**
 	for(unsigned int i=0;i<rings_list_.size();i++){
 		rings_info t = rings_list_[i];
 		drawRings(dataArray, t.x, t.y, t.r, Color8u(249,132,229));
@@ -386,7 +412,9 @@ void CatPictureApp::update()
 		rings_info t = accident_list_[i];
 		drawAccident(dataArray, t.x, t.y, t.r, Color8u(249,132,229));
 		accident_list_[i].r -= 4;
+	
 	}
+	*/
 	
 	//
 	// End creative bits
@@ -399,7 +427,7 @@ void CatPictureApp::update()
 	
 	//Only save the first frame of drawing as output
 	if(frame_number_ == 0){
-		writeImage("brinkmwj.png",*mySurface_);
+		writeImage("vincensd.png",*mySurface_);
 		//We do this here, instead of setup, because we don't want to count the writeImage time in our estimate
 		app_start_time_ = boost::posix_time::microsec_clock::local_time();
 	}
