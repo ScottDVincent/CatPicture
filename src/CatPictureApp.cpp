@@ -13,8 +13,9 @@
  *
  *
  * @note This project satisfies goals 
- *	A.1 (rectangle), A.2 (circle), B.1 (blur), 
- * E.2 (transparency),  E.5 (animation) and E.6 (mouse interaction)
+ *	A.1 (rectangle), A.3 (line), 
+ *  B.1 (blur), 
+ *  E.2 (transparency),  E.5 (animation) and E.6 (mouse interaction)
  */
 
 #include "cinder/app/AppBasic.h"
@@ -112,7 +113,13 @@ class CatPictureApp : public AppBasic {
 	*
 	* This satisfies requirement A.1. 
 	*/
-	void drawRectangle (uint8_t* pixels, int rect_width, int rec_height);
+	void drawRectangle (uint8_t* pixels, int rect_width, int rec_height, int x_length, int y_height);
+
+	/**
+	*
+	*
+	*/
+	void drawRectangleGradient(uint8_t* pixels, int rect_width, int rec_height, int x_length, int y_height );
 
 }; // end public AppBasic
 
@@ -135,6 +142,44 @@ void CatPictureApp::drawLine(uint8_t* pixels, int rect_width, int rec_height){
 
 }
 
+/// This method  draws a random colored rectangle on the screen
+void CatPictureApp::drawRectangle(uint8_t* pixels, int rect_width, int rec_height, int x_length, int y_height ){
+
+	if ( (x_length < rect_width) && (y_height < rec_height) ){
+		
+		//rndColor = Rand::randInt (0,255);
+		for ( int y=50; y <= y_height; y++){
+			for ( int x = 0; x <= x_length; x++) {
+				pixels [3* (x+y*x_length)]=0;
+				pixels [3* (x+y*x_length)+1]=255;
+				pixels [3* (x+y*x_length)+2]=0;
+				//pixels [3* (x+y)]=0;
+				//pixels [3* (x+y)+1]=255;
+				//pixels [3* (x+y)+2]=0;
+			}
+		}
+	}
+
+}
+
+/// This method  draws a random colored rectangle on the screen
+void CatPictureApp::drawRectangleGradient(uint8_t* pixels, int rect_width, int rec_height, int x_length, int y_height ){
+
+	if ( (x_length < rect_width) && (y_height < rec_height) ){
+		
+		//rndColor = Rand::randInt (0,255);
+		for ( int y=200; y <= y_height; y++) {
+			for ( int x = 0; x <= x_length; x++){
+				pixels [3* (x+y*x_length)]=255;
+				pixels [3* (x+y*x_length)+1]=255;
+				pixels [3* (x+y*x_length)+2]=0;
+				//pixels [3* (x+y)]=0;
+				//pixels [3* (x+y)+1]=255;
+				//pixels [3* (x+y)+2]=0;
+			}
+		}
+	}
+}
 
 //This function takes about 15.265 ms for 800x600
 void CatPictureApp::tileWithRectangles(uint8_t* pixels, int x1, int y1, int x2, int y2, int rect_width, int rect_height, Color8u fill1, Color8u border1, Color8u fill2, Color8u border2){
@@ -222,9 +267,9 @@ void CatPictureApp::selectiveBlur(uint8_t* image_to_blur, uint8_t* blur_pattern)
 	//These are used in right shifts.
 	//Both of these kernels actually darken as well as blur.
 	uint8_t kernelA[9] = 
-	   {4,3,4,
-		4,3,4,
-		4,3,4};
+	   {1/9,1/9,1/9,
+		1/9,1/9,1/9,
+		1/9,1/9,1/9};
 	uint8_t kernelB[9] = 
 	   {4,3,4,
 		4,2,4,
@@ -299,6 +344,7 @@ void CatPictureApp::setup()
 	
 	//Setup for my blur function
 	Surface yose_picture(loadImage( loadResource(RES_YOSE) ));
+	
 	
 	uint8_t* blur_data = yose_picture.getData();	
 	my_blur_pattern_ = new uint8_t[kAppWidth*kAppHeight*3];
@@ -388,8 +434,7 @@ void CatPictureApp::update()
 	//Get our array of pixel information
 	/// see notes [C]
 	uint8_t* dataArray = (*mySurface_).getData();
-	
-	
+		
 	
 	//
 	// Creative bits go here
@@ -409,7 +454,7 @@ void CatPictureApp::update()
 	drawLine (dataArray, 800, 600);
 
 	//drawRectangle method
-	drawRectangle (dataArray, 800, 600);
+	drawRectangle (dataArray, 800, 600, 200, 300);
 
 	//With just this method called, frame rate drops from 54 to 11.93
 	selectiveBlur(dataArray, my_blur_pattern_);
