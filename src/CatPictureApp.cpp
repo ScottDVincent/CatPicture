@@ -22,6 +22,7 @@
 #include "cinder/gl/Texture.h"
 #include "cinder/ImageIo.h"
 #include "boost/date_time/posix_time/posix_time.hpp"
+#include "cinder/Rand.h"
 #include "Resources.h"
 
 using namespace ci;
@@ -39,6 +40,9 @@ class CatPictureApp : public AppBasic {
   private:
 	Surface* mySurface_; //The Surface object whose pixel array we will modify
 	//gl::Texture* myTexture_; //The Texture object that we use to display our Surface in the window
+
+	//integer for random color
+    int rndColor;
 	
 	//Track how many frames we have shown, for animation purposes
 	int frame_number_;
@@ -95,13 +99,20 @@ class CatPictureApp : public AppBasic {
 	 */
 	void drawAccident(uint8_t* pixels, int x, int y, int r, Color8u c);
 
+
 	/**
 	* This method draws a line across the top of the screen
 	*
-	* This satisfies requirement A.1. Start small  and build on minor successes!
+	* This satisfies requirement A.3. Start small  and build on minor successes!
 	*/
 	void drawLine (uint8_t* pixels, int rect_width, int rec_height);
 
+	/**
+	* This method draws a rectangle in the middle of the screen
+	*
+	* This satisfies requirement A.1. 
+	*/
+	void drawRectangle (uint8_t* pixels, int rect_width, int rec_height);
 
 }; // end public AppBasic
 
@@ -112,13 +123,14 @@ void CatPictureApp::prepareSettings(Settings* settings){
 }
 
 
+/// This method  draws a random colored line at the top of the screen
 void CatPictureApp::drawLine(uint8_t* pixels, int rect_width, int rec_height){
-	Color8u c = Color8u(255,0,0);
 
+	rndColor = Rand::randInt (0,255);
 	for ( int i=0; i<=rect_width-1; i++){
-	pixels [3*i]=0;
-	pixels [3*i+1]=255;
-	pixels [3*i+2]=0;
+	pixels [3*i]=rndColor;
+	pixels [3*i+1]=rndColor;
+	pixels [3*i+2]=rndColor;
 	}
 
 }
@@ -391,10 +403,13 @@ void CatPictureApp::update()
 	Color8u border2 = Color8u(255,255,255);
 
 	//With just this method called, frame rate drops from 54 to 53.5.
-	tileWithRectangles(dataArray, -(frame_number_%14), -(frame_number_%14), 800, 600, 7, 7, fill1, border1, fill2, border2);
+	//tileWithRectangles(dataArray, -(frame_number_%14), -(frame_number_%14), 800, 600, 7, 7, fill1, border1, fill2, border2);
 	
-	//line method
+	// drawLine method
 	drawLine (dataArray, 800, 600);
+
+	//drawRectangle method
+	drawRectangle (dataArray, 800, 600);
 
 	//With just this method called, frame rate drops from 54 to 11.93
 	selectiveBlur(dataArray, my_blur_pattern_);
