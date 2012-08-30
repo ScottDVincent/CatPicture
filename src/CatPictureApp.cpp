@@ -40,6 +40,7 @@ class CatPictureApp : public AppBasic {
 	
   private:
 	Surface* mySurface_; //The Surface object whose pixel array we will modify
+	Surface yose_pic;
 	//gl::Texture* myTexture_; //The Texture object that we use to display our Surface in the window
 
 	//integer for random color
@@ -121,6 +122,13 @@ class CatPictureApp : public AppBasic {
 	*/
 	void drawRectangleGradient(uint8_t* pixels, int rect_width, int rec_height, int x_length, int y_height );
 
+	/**
+	*
+	*
+	*
+	*/
+	void tintOverlay (uint8_t* pixels, int rect_width, int rec_height);
+
 }; // end public AppBasic
 
 
@@ -134,28 +142,28 @@ void CatPictureApp::prepareSettings(Settings* settings){
 void CatPictureApp::drawLine(uint8_t* pixels, int rect_width, int rec_height){
 
 	rndColor = Rand::randInt (0,255);
+
 	for ( int i=0; i<=rect_width-1; i++){
-	pixels [3*i]=rndColor;
-	pixels [3*i+1]=rndColor;
-	pixels [3*i+2]=rndColor;
+		pixels [3*i]=rndColor;
+		pixels [3*i+1]=rndColor;
+		pixels [3*i+2]=rndColor;
 	}
 
 }
 
-/// This method  draws a random colored rectangle on the screen
+/// This method  draws a colored rectangle on the screen
 void CatPictureApp::drawRectangle(uint8_t* pixels, int rect_width, int rec_height, int x_length, int y_height ){
+
+	//int offset = 3*(int x + int y*kTextureSize);
 
 	if ( (x_length < rect_width) && (y_height < rec_height) ){
 		
-		//rndColor = Rand::randInt (0,255);
-		for ( int y=50; y <= y_height; y++){
-			for ( int x = 0; x <= x_length; x++) {
+		for ( int y = 50; y <= y_height; y++ ){
+			for ( int x = 0; x <= x_length; x++ ) {
 				pixels [3* (x+y*x_length)]=0;
 				pixels [3* (x+y*x_length)+1]=255;
 				pixels [3* (x+y*x_length)+2]=0;
-				//pixels [3* (x+y)]=0;
-				//pixels [3* (x+y)+1]=255;
-				//pixels [3* (x+y)+2]=0;
+				
 			}
 		}
 	}
@@ -168,14 +176,13 @@ void CatPictureApp::drawRectangleGradient(uint8_t* pixels, int rect_width, int r
 	if ( (x_length < rect_width) && (y_height < rec_height) ){
 		
 		//rndColor = Rand::randInt (0,255);
+		//start y at 200 pixels down the screen
 		for ( int y=200; y <= y_height; y++) {
 			for ( int x = 0; x <= x_length; x++){
-				pixels [3* (x+y*x_length)]=255;
-				pixels [3* (x+y*x_length)+1]=255;
-				pixels [3* (x+y*x_length)+2]=0;
-				//pixels [3* (x+y)]=0;
-				//pixels [3* (x+y)+1]=255;
-				//pixels [3* (x+y)+2]=0;
+				//pixels [3* (x+y*x_length)]=255;
+				//pixels [3* (x+y*x_length)+1]=255;
+				//pixels [3* (x+y*x_length)+2]=0;
+				
 			}
 		}
 	}
@@ -267,13 +274,13 @@ void CatPictureApp::selectiveBlur(uint8_t* image_to_blur, uint8_t* blur_pattern)
 	//These are used in right shifts.
 	//Both of these kernels actually darken as well as blur.
 	uint8_t kernelA[9] = 
-	   {1/9,1/9,1/9,
+	  	{1/9,1/9,1/9,
 		1/9,1/9,1/9,
 		1/9,1/9,1/9};
 	uint8_t kernelB[9] = 
-	   {4,3,4,
-		4,2,4,
-		4,3,4};
+	  	{1/4,1/3,1/4,
+		1/4,1/2,1/4,
+		1/4,1/3,1/4};
 	
 	uint8_t total_red  =0;
 	uint8_t total_green=0;
@@ -341,11 +348,11 @@ void CatPictureApp::setup()
 	//This is the setup that everyone needs to do
 	mySurface_ = new Surface(kTextureSize,kTextureSize,false);
 	//myTexture_ = new gl::Texture(*mySurface_);
-	
+	//	gl::Texture yose_pic = gl::Texture(loadImage( loadResource(RES_YOSE) ));
+
+
 	//Setup for my blur function
 	Surface yose_picture(loadImage( loadResource(RES_YOSE) ));
-	
-	
 	uint8_t* blur_data = yose_picture.getData();	
 	my_blur_pattern_ = new uint8_t[kAppWidth*kAppHeight*3];
 	
@@ -448,13 +455,16 @@ void CatPictureApp::update()
 	Color8u border2 = Color8u(255,255,255);
 
 	//With just this method called, frame rate drops from 54 to 53.5.
-	//tileWithRectangles(dataArray, -(frame_number_%14), -(frame_number_%14), 800, 600, 7, 7, fill1, border1, fill2, border2);
+	//tileWithRectangles(dataArray, -(frame_number_%14), +(frame_number_%14), 800, 600, 7, 7, fill1, border1, fill2, border2);
 	
 	// drawLine method
 	drawLine (dataArray, 800, 600);
 
 	//drawRectangle method
-	drawRectangle (dataArray, 800, 600, 200, 300);
+	drawRectangle (dataArray, 800, 600, 200, 500);
+
+	//tintOverlay method 
+	//tintOverlay (dataArray, 800, 600);
 
 	//With just this method called, frame rate drops from 54 to 11.93
 	selectiveBlur(dataArray, my_blur_pattern_);
@@ -505,6 +515,11 @@ void CatPictureApp::draw()
 {
 	//Draw our texture to the screen, using graphics library
 	gl::draw(*mySurface_);
+
+	////gl::draw(yose_pic, getWindowBounds() );
+
+	
+	
 }
 
 CINDER_APP_BASIC( CatPictureApp , RendererGl )
