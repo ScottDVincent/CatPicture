@@ -107,27 +107,49 @@ class CatPictureApp : public AppBasic {
 	*
 	* This satisfies requirement A.3. Start small  and build on minor successes!
 	*/
-	void drawLine (uint8_t* pixels, int rect_width, int rec_height);
+	void drawLine (uint8_t* pixels, int x_start, int line_width, int line_height);
 
 	/**
-	* This method draws a rectangle in the middle of the screen
+	* This method draws a rectangle of width x height as given by the call 
 	*
 	* This satisfies requirement A.1. 
 	*/
-	void drawRectangle (uint8_t* pixels, int rect_width, int rec_height, int x_length, int y_height);
+	void drawRectangle (uint8_t* pixels, int x_width, int y_height, int x_origin, int y_origin);
 
 	/**
 	*
+	* This method copies the rectangle above of width x height as given by the call 
+	*
+	* This satisfies requirement A.5. 
 	*
 	*/
-	void drawRectangleGradient(uint8_t* pixels, int rect_width, int rec_height, int x_length, int y_height );
+	void copyRectangle (uint8_t* pixels, int x_length, int y_height, int x_origin, int y_origin, int y_original_rect);
 
 	/**
 	*
+	* This method draws a triangle with three points given 
 	*
+	* This satisfies requirement A.5. 
 	*
+	*/
+	void drawTriangle (uint8_t* pixels, int side_length, int pt_one, int pt_two, int pt_three);
+	
+	
+	/**
+	* This method overlays a color over the entire surface by averaging the base colors with a red tint (255,0,0).
+	*
+	* This satisfies requirement A.6.
 	*/
 	void tintOverlay (uint8_t* pixels, int rect_width, int rec_height);
+
+
+	/**
+	*
+	*
+	*
+	*/
+	void makeLine ( uint8_t* pixels, int x0, int y0, int x1, int y1, int color );
+	
 
 }; // end public AppBasic
 
@@ -138,55 +160,155 @@ void CatPictureApp::prepareSettings(Settings* settings){
 }
 
 
+
+
+
 /// This method  draws a random colored line at the top of the screen
-void CatPictureApp::drawLine(uint8_t* pixels, int rect_width, int rec_height){
+void CatPictureApp::drawLine(uint8_t* pixels, int x_start, int line_width, int line_height){
 
 	rndColor = Rand::randInt (0,255);
+	int y_start = 25;
 
-	for ( int i=0; i<=rect_width-1; i++){
-		pixels [3*i]=rndColor;
-		pixels [3*i+1]=rndColor;
-		pixels [3*i+2]=rndColor;
-	}
+	if (  (x_start + line_width) <= kAppWidth ) {
+	for (int y = y_start; y <= (y_start + line_height); y++) {
+
+		for ( int x = x_start; x <= line_width-1; x++){
+			pixels [3* (x + y*(kTextureSize))  ]=rndColor;
+			pixels [3* (x + y*(kTextureSize))+1]=rndColor;
+			pixels [3* (x + y*(kTextureSize))+2]=rndColor;
+			}	
+
+		}	    //end y
+
+	}		// end if
 
 }
 
 /// This method  draws a colored rectangle on the screen
-void CatPictureApp::drawRectangle(uint8_t* pixels, int rect_width, int rec_height, int x_length, int y_height ){
+void CatPictureApp::drawRectangle(uint8_t* pixels, int x_width, int y_height, int x_origin, int y_origin){
 
 	//int offset = 3*(int x + int y*kTextureSize);
 
-	if ( (x_length < rect_width) && (y_height < rec_height) ){
+	if ( (x_width < kAppWidth) && (y_height < kAppHeight) ){
 		
-		for ( int y = 50; y <= y_height; y++ ){
-			for ( int x = 0; x <= x_length; x++ ) {
-				pixels [3* (x+y*x_length)]=0;
-				pixels [3* (x+y*x_length)+1]=255;
-				pixels [3* (x+y*x_length)+2]=0;
-				
+		// start at y_origin
+		for ( int y = y_origin; y <= (y_height); y++ ){
+			for ( int  x = x_origin; x <= (x_origin + x_width); x++ ) {
+				pixels [3* (x + y*(kTextureSize))  ]=0;
+				pixels [3* (x + y*(kTextureSize))+1]=255;
+				pixels [3* (x + y*(kTextureSize))+2]=0;
+				//rect_width-1
 			}
 		}
-	}
+	} //end if
 
 }
 
-/// This method  draws a random colored rectangle on the screen
-void CatPictureApp::drawRectangleGradient(uint8_t* pixels, int rect_width, int rec_height, int x_length, int y_height ){
+/// This method  draws a colored rectangle on the screen
+void CatPictureApp::copyRectangle(uint8_t* pixels, int x_width, int y_height, int x_origin, int y_origin, int y_original_rect){
 
-	if ( (x_length < rect_width) && (y_height < rec_height) ){
+	//int offset = 3*(int x + int y*kTextureSize);
+	// assumes y_original of copied rect will be > than the y_original_rect row
+	int y_offset = (y_origin - y_original_rect);
+
+	if ( (x_width < kAppWidth) && ( (y_height + y_origin) < kAppHeight) ){
 		
-		//rndColor = Rand::randInt (0,255);
-		//start y at 200 pixels down the screen
-		for ( int y=200; y <= y_height; y++) {
-			for ( int x = 0; x <= x_length; x++){
-				//pixels [3* (x+y*x_length)]=255;
-				//pixels [3* (x+y*x_length)+1]=255;
-				//pixels [3* (x+y*x_length)+2]=0;
+		
+		// start a y=300
+		//for ( int yi = 300; yi <= (y_height+300); yi++ ){
+		for ( int y = y_origin; y <= (y_height + y_origin); y++ ){
+			for ( int x = x_origin; x <= (x_origin + x_width); x++ ) {
+				//pixels [3* (x + y*kTextureSize)  ] = pixels [3* (x + (y-250)*kTextureSize)   ];
+				//pixels [3* (x + y*kTextureSize)+1] = pixels [3* (x + (y-250)*kTextureSize) +1];
+				//pixels [3* (x + y*kTextureSize)+2] = pixels [3* (x + (y-250)*kTextureSize) +2];
 				
-			}
-		}
-	}
+				pixels [3* (x + y*kTextureSize)  ] = pixels [3* (x + (y - y_offset)*kTextureSize)   ];
+				pixels [3* (x + y*kTextureSize)+1] = pixels [3* (x + (y - y_offset)*kTextureSize) +1];
+				pixels [3* (x + y*kTextureSize)+2] = pixels [3* (x + (y - y_offset)*kTextureSize) +2];
+					} // end x
+				}	  // end y
+	
+	}				  // end if
+
 }
+
+
+/// This method draws a triangle when gizen the side length
+void CatPictureApp::drawTriangle (uint8_t* pixels, int side_length, int pt_one, int pt_two, int pt_three){
+
+	// bounds checking 
+
+	if ( (pt_one <= kAppWidth) && ( (pt_one + side_length) <= kAppWidth) ) {// ( sqrt  ((pt_one*pt_one) + (side_length*side_length))  < kAppWidth) ) {
+
+	//for (int tri = 0; tri <= 2; tri++){
+		int x = pt_one;
+		int y = pt_two;
+		
+		//move one: go right, x+1, y+1
+		for ( int m1 = 0; m1 <= side_length; m1++ ){
+				pixels [3* (x + (y * kTextureSize))  ]=0;
+				pixels [3* (x + (y * kTextureSize))+1]=0;
+				pixels [3* (x + (y * kTextureSize))+2]=255; 
+
+				x = x+1;
+				y = y+1;
+		}// end move 1
+
+		//move two: go left. x-1, y stays the same
+		for ( int m1 = 0; m1 <= side_length*2; m1++ ){
+				pixels [3* (x + (y * kTextureSize))  ]=0;
+				pixels [3* (x + (y * kTextureSize))+1]=0;
+				pixels [3* (x + (y * kTextureSize))+2]=255; 
+
+				x = x-1;
+		}// end move 2
+
+
+		//move three: go up. x+1, y-1
+		for ( int m1 = 0; m1 <= side_length; m1++ ){
+				pixels [3* (x + (y * kTextureSize))  ]=0;
+				pixels [3* (x + (y * kTextureSize))+1]=0;
+				pixels [3* (x + (y * kTextureSize))+2]=255; 
+
+				x = x+1;
+				y = y-1;
+		}// end move 3
+
+	}    // end if
+
+	//*/
+} // end drawTriangle
+
+
+
+void CatPictureApp::makeLine ( uint8_t* pixels, int x0, int y0, int x1, int y1, int color ){ 
+	
+								
+	 int     x, offset;       
+	 float   dy, dx, y, m;
+
+			   //formula from geometry
+	 dy = y1 - y0;
+	 dx = x1 - x0;
+
+	 m = dy / dx;
+	 y = y0;
+
+			   // iterate and draw
+				for ( x = x0; x <= x1; x++ ) {
+				offset = 3 * (x + (y * kTextureSize)); 
+     
+				 pixels [offset  ]= 255;
+				 pixels [offset +1]= 0;
+				 pixels [offset +2]= 0; 
+      
+				  y += m;   //* Step y by slope m 
+			   }			// end for loop
+
+}							// end makeLine
+
+
+	
 
 //This function takes about 15.265 ms for 800x600
 void CatPictureApp::tileWithRectangles(uint8_t* pixels, int x1, int y1, int x2, int y2, int rect_width, int rect_height, Color8u fill1, Color8u border1, Color8u fill2, Color8u border2){
@@ -278,9 +400,9 @@ void CatPictureApp::selectiveBlur(uint8_t* image_to_blur, uint8_t* blur_pattern)
 		1/9,1/9,1/9,
 		1/9,1/9,1/9};
 	uint8_t kernelB[9] = 
-	  	{1/4,1/3,1/4,
-		1/4,1/2,1/4,
-		1/4,1/3,1/4};
+	  	{4,3,4,
+		4,2,4,
+		4,3,4};
 	
 	uint8_t total_red  =0;
 	uint8_t total_green=0;
@@ -347,11 +469,13 @@ void CatPictureApp::setup()
 	
 	//This is the setup that everyone needs to do
 	mySurface_ = new Surface(kTextureSize,kTextureSize,false);
+
 	//myTexture_ = new gl::Texture(*mySurface_);
 	//	gl::Texture yose_pic = gl::Texture(loadImage( loadResource(RES_YOSE) ));
 
 
 	//Setup for my blur function
+	/**
 	Surface yose_picture(loadImage( loadResource(RES_YOSE) ));
 	uint8_t* blur_data = yose_picture.getData();	
 	my_blur_pattern_ = new uint8_t[kAppWidth*kAppHeight*3];
@@ -362,6 +486,7 @@ void CatPictureApp::setup()
 			my_blur_pattern_[offset] = blur_data[offset];
 		}
 	}
+	*/
 	
 	//Setup for my rings
 	rings_info t;
@@ -377,6 +502,7 @@ void CatPictureApp::setup()
 
 void CatPictureApp::mouseDown( MouseEvent event )
 {
+
 	//Satisfies E.6, though it is debatable whether or not this is an "interesting" interaction
 	rings_info t;
 	t.x = event.getX();
@@ -458,16 +584,27 @@ void CatPictureApp::update()
 	//tileWithRectangles(dataArray, -(frame_number_%14), +(frame_number_%14), 800, 600, 7, 7, fill1, border1, fill2, border2);
 	
 	// drawLine method
-	drawLine (dataArray, 800, 600);
+	drawLine (dataArray, 50, 200, 2);
 
-	//drawRectangle method
-	drawRectangle (dataArray, 800, 600, 200, 500);
+	
+	//drawRectangle call
+	drawRectangle (dataArray, 200, 200, 0, 50);
 
-	//tintOverlay method 
+	//copyRectangle call
+	// 100, 100 wil copy just a subset of the above rectangle
+	copyRectangle(dataArray, 200, 200, 0, 300, 50);
+
+	//tintOverlay call 
 	//tintOverlay (dataArray, 800, 600);
 
+	// drawTriangle call
+	drawTriangle (dataArray, 100, 400, 200, 0);
+
+	// makeLine call
+	makeLine (dataArray, 0, 0, 300, 500, 255);
+
 	//With just this method called, frame rate drops from 54 to 11.93
-	selectiveBlur(dataArray, my_blur_pattern_);
+	//selectiveBlur(dataArray, my_blur_pattern_);
 	
 	//while(rings_list_.size() > 0 && rings_list_[0].r <= 0) rings_list_.pop_front();
 	//while(accident_list_.size() > 0 && accident_list_[0].r <= 0) accident_list_.pop_front();
