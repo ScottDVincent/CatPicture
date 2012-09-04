@@ -152,7 +152,7 @@ class CatPictureApp : public AppBasic {
 
 	
 	/**
-	* This method overlays a color over the entire surface by averaging the base colors with a red tint (255,0,0).
+	* This method overlays a color over the entire surface and updates it throughout a loop
 	*
 	* This satisfies requirement A.6.
 	*/
@@ -185,7 +185,7 @@ void CatPictureApp::drawLine(uint8_t* pixels, int x_start, int y_start, int line
 	if (  (x_start + line_width) <= AppWidth ) {
 	for (int y = y_start; y <= (y_start + line_height); y++) {
 
-		for ( int x = x_start; x <= line_width-1; x++){
+		for ( int x = x_start; x <= line_width; x++){
 			pixels [3* (x + y*(TextureSize))  ] = rndColor;
 			pixels [3* (x + y*(TextureSize))+1] = rndColor;
 			pixels [3* (x + y*(TextureSize))+2] = rndColor;
@@ -304,18 +304,19 @@ void CatPictureApp::drawTriangle (uint8_t* pixels, int side_length, int pt_x, in
 
 void CatPictureApp::makeLine ( uint8_t* pixels, int x0, int y0, int x1, int y1, Color8u c ){ 
 								
-	 int     x, offset;       
+	 int     x = 0, offset;       
 	 float   dy, dx, y, m;
 	 
 
 	//formula from geometry
 	 dy = y1 - y0;
 	 dx = x1 - x0;
-
 	 m = dy / dx;
 	 y = y0;
 
+
 			   // iterate and draw
+			//if (x1 > x0) {
 				for ( x = x0; x <= x1; x++ ) {
 				offset = 3 * (x + (y * TextureSize)); 
      
@@ -323,20 +324,58 @@ void CatPictureApp::makeLine ( uint8_t* pixels, int x0, int y0, int x1, int y1, 
 				 pixels [offset +1]= c.g;
 				 pixels [offset +2]= c.b; 
       
-				  y += m;   //* Step y by slope m 
-			   }			// end for loop
+				 y += m;   //* Step y by slope m 
+				 //return;
+				} // end for loop
+				
+				/**
+				} else {
+				
+				    for ( x = x1; x <= x0; x-- ) {
+					offset = 3 * (x + (y * TextureSize)); 
+     
+					 pixels [offset  ]=  c.r;
+					 pixels [offset +1]= c.g;
+					 pixels [offset +2]= c.b; 
+      
+					  y += m;   //* Step y by slope m 
+				
+					}// end for loop
+			}
+			*/
 
 }							// end makeLine
 
 
 void CatPictureApp::convoluteImage (uint8_t* image_to_convolute){
 	
+	int x, y, in_x, in_y;
+	int kernel;
+	kernel= //an array [9];
+
+
 	// create copy of original
 	Surface cloneSurface = Surface (TextureSize, TextureSize, false);
 	Surface copyArray = cloneSurface.clone(image_to_convolute);	
 
+	// outer loop to iterate around image
+	for(y = 0; y <= AppHeight-1; y++) {
+	   for(x = 0; x <= AppWidth-1; x++) {
 	
-}
+	// each of the inner's go from -1 to 1, a 3x3 matrix is (-1,-1) in the upper left and (1,1) lower right
+		for( in_y=-1; in_y<=1; in_y++){					
+			for( in_x=-1; in_x<=1; in_x++){
+	
+		// have to do the kernal transform here
+
+
+		  } //end inner_x
+		}  // end inner_y
+	
+	  } //end x
+	}   // end y	
+	
+}       // end convoluteImage
 
 
 void CatPictureApp::selectiveBlur(uint8_t* image_to_blur, uint8_t* blur_pattern){
@@ -538,26 +577,35 @@ void CatPictureApp::update()
 		
 		
 	/// make drawing calls ///
-
-	// drawLine method
-	drawLine (dataArray, 50, 25, 200, 2);
-
 	
-	//drawRectangle call
-	drawRectangle (dataArray, 200, 200, 0, 50, Color8u(0, 255, 0) );
-
-	//copyRectangle call
-	// 100, 100 wil copy just a subset of the above rectangle
-	copyRectangle(dataArray, 200, 200, 0, 300, 50, Color8u(255, 255, 255) );
-
-	// drawTriangle call
-	drawTriangle (dataArray, 100, 400, 200, Color8u(0, 0, 255) );
+	// drawLine method
+	// int x_start, int y_start, int line_width, int line_height
+	drawLine (dataArray, 200, 250, 400, 2);
+	
 
 	// makeLine call
-	makeLine (dataArray, 0, 0, 300, 500, Color8u(0, 255, 0) );
+	makeLine (dataArray, 100, 190, 100, 100, Color8u(0, 255, 0) );
+	makeLine (dataArray, 410, 100, 600, 100, Color8u(0, 255, 0) );
 
 	//tintOverlay call 
 	tintOverlay(dataArray, Color8u(0, 255, 0));
+
+	
+
+	
+	//drawRectangle call
+	//(uint8_t* pixels, int x_width, int y_height, int x_origin, int y_origin, Color8u c);
+	drawRectangle (dataArray, 200, 200, 200, 100, Color8u(0, 255, 0) );
+
+	//copyRectangle call
+	// 100, 100 for x & y_width will copy just a subset of the above rectangle
+	//(uint8_t* pixels, int x_width, int y_height, int x_origin, int y_origin, Color8u c);
+	copyRectangle(dataArray, 200, 200, 200, 350, 100, Color8u(255, 255, 255) );
+
+
+	// drawTriangle call
+	drawTriangle (dataArray, 50, 300, 20, Color8u(0, 0, 255) );
+	
 
 	// Convolution call
 	// convoluteImage(dataArray );
