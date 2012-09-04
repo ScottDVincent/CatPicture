@@ -50,15 +50,14 @@ class CatPictureApp : public AppBasic {
 	int frame_number_;
 	boost::posix_time::ptime app_start_time_;
 	
-		
-	uint8_t* my_blur_pattern_;
-	
+				
 	//Width and height of the screen
 	static const int AppWidth=800;
 	static const int AppHeight=600;
 	static const int TextureSize=1024; //Must be the next power of 2 bigger or equal to app dimensions
 	
-	
+	uint8_t* my_blur_pattern_;
+
 	/**
 	 * Blur one image, using another as a template.
 	 *
@@ -160,6 +159,13 @@ class CatPictureApp : public AppBasic {
 	void tintOverlay (uint8_t* pixels, Color8u color);
 
 
+	/**
+	* This method convolutes an image
+	*/
+	void convoluteImage (uint8_t* pixels);
+		
+
+
 }; // end public AppBasic
 
 
@@ -167,8 +173,6 @@ void CatPictureApp::prepareSettings(Settings* settings){
 	(*settings).setWindowSize(AppWidth,AppHeight);
 	(*settings).setResizable(false);
 }
-
-
 
 
 
@@ -325,8 +329,16 @@ void CatPictureApp::makeLine ( uint8_t* pixels, int x0, int y0, int x1, int y1, 
 }							// end makeLine
 
 
+void CatPictureApp::convoluteImage (uint8_t* image_to_convolute){
+	
+	// create copy of original
+	Surface cloneSurface = Surface (TextureSize, TextureSize, false);
+	Surface copyArray = cloneSurface.clone(image_to_convolute);	
 
 	
+}
+
+
 void CatPictureApp::selectiveBlur(uint8_t* image_to_blur, uint8_t* blur_pattern){
 	//Convolution filters tend to overwrite the data that you need, so
 	// we keep a temporary copy of the image_to_blur. There are certainly
@@ -545,10 +557,10 @@ void CatPictureApp::update()
 	makeLine (dataArray, 0, 0, 300, 500, Color8u(0, 255, 0) );
 
 	//tintOverlay call 
-	tintOverlay(dataArray, Color8u(, 255, 0));
+	tintOverlay(dataArray, Color8u(0, 255, 0));
 
 	// Convolution call
-	// convolution(dataArray, convolution_pattern_);
+	// convoluteImage(dataArray );
 
 
 	//With just this method called, frame rate drops from 54 to 11.93
