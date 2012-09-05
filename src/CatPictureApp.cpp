@@ -161,10 +161,11 @@ class CatPictureApp : public AppBasic {
 
 	/**
 	* This method convolutes an image
+	*
+	* It's pretty lame and probably won't satisfy B.4
 	*/
 	void convoluteImage (uint8_t* pixels);
-		
-
+	
 
 }; // end public AppBasic
 
@@ -189,11 +190,10 @@ void CatPictureApp::drawLine(uint8_t* pixels, int x_start, int y_start, int line
 			pixels [3* (x + y*(TextureSize))  ] = rndColor;
 			pixels [3* (x + y*(TextureSize))+1] = rndColor;
 			pixels [3* (x + y*(TextureSize))+2] = rndColor;
-			}	
-
-		}	    //end y
-
-	}		// end if
+			
+			} // end x	
+		}	  // end y
+	}		  // end if
 
 }
 
@@ -223,7 +223,7 @@ void CatPictureApp::drawRectangle(uint8_t* pixels, int x_width, int y_height, in
 				pixels [3* (x + y*(TextureSize))+2] = c.b;
 				//rect_width-1
 			}
-		}
+		 }
 	} //end if
 
 }
@@ -231,15 +231,11 @@ void CatPictureApp::drawRectangle(uint8_t* pixels, int x_width, int y_height, in
 /// This method  draws a colored rectangle on the screen
 void CatPictureApp::copyRectangle(uint8_t* pixels, int x_width, int y_height, int x_origin, int y_origin, int y_original_rect, Color8u c){
 
-	//int offset = 3*(int x + int y*TextureSize);
 	// assumes y_original of copied rect will be > than the y_original_rect row
 	int y_offset = (y_origin - y_original_rect);
 
 	if ( (x_width < AppWidth) && ( (y_height + y_origin) < AppHeight) ){
 		
-		
-		// start at y=300
-		//for ( int yi = 300; yi <= (y_height+300); yi++ ){
 		for ( int y = y_origin; y <= (y_height + y_origin); y++ ){
 
 			for ( int x = x_origin; x <= (x_origin + x_width); x++ ) {						
@@ -305,18 +301,17 @@ void CatPictureApp::drawTriangle (uint8_t* pixels, int side_length, int pt_x, in
 void CatPictureApp::makeLine ( uint8_t* pixels, int x0, int y0, int x1, int y1, Color8u c ){ 
 								
 	 int     x = 0, offset;       
-	 float   dy, dx, y, m;
-	 
+	 float   dy, dx, y, m;  // need float to get a fractional value 
 
-	//formula from geometry
+	//formulas from geometry
 	 dy = y1 - y0;
 	 dx = x1 - x0;
 	 m = dy / dx;
 	 y = y0;
 
 
-			   // iterate and draw
-			//if (x1 > x0) {
+			    // iterate and draw
+			    //if (x1 > x0) {
 				for ( x = x0; x <= x1; x++ ) {
 				offset = 3 * (x + (y * TextureSize)); 
      
@@ -325,10 +320,11 @@ void CatPictureApp::makeLine ( uint8_t* pixels, int x0, int y0, int x1, int y1, 
 				 pixels [offset +2]= c.b; 
       
 				 y += m;   //* Step y by slope m 
-				 //return;
+				 
 				} // end for loop
 				
 				/**
+				// this is code to try and draw the line if it's going from right to left
 				} else {
 				
 				    for ( x = x1; x <= x0; x-- ) {
@@ -344,171 +340,100 @@ void CatPictureApp::makeLine ( uint8_t* pixels, int x0, int y0, int x1, int y1, 
 			}
 			*/
 
-}							// end makeLine
+}	// end makeLine
 
 
-void CatPictureApp::convoluteImage (uint8_t* image_to_convolute){
+void CatPictureApp::convoluteImage ( uint8_t* image_to_convolute) {
 	
-	int x, y, in_x, in_y;
-	int kernel;
-	kernel= //an array [9];
-
-
-	// create copy of original
+	/**
+	// create a new Surface
 	Surface cloneSurface = Surface (TextureSize, TextureSize, false);
 	Surface copyArray = cloneSurface.clone(image_to_convolute);	
+	*/
 
-	// outer loop to iterate around image
-	for(y = 0; y <= AppHeight-1; y++) {
-	   for(x = 0; x <= AppWidth-1; x++) {
+
+	/**
+	The ideas for this function come from:
+
+	(1)Bo Brinkman
+
+	(2)www.sussex.ac.uk/Users/davidy/teachvision/vision2.html
+	The location of (0, 0) (i.e. column 0, row 0) in the mask is important: during convolution, each result will be placed in the output array at the location corresponding to the pixel lying under the (0, 0) mask element in the input array
 	
-	// each of the inner's go from -1 to 1, a 3x3 matrix is (-1,-1) in the upper left and (1,1) lower right
-		for( in_y=-1; in_y<=1; in_y++){					
-			for( in_x=-1; in_x<=1; in_x++){
-	
-		// have to do the kernal transform here
+	(3)songho.ca/dsp/convolution/convolution2d_example.html
+	*/
 
 
-		  } //end inner_x
-		}  // end inner_y
-	
-	  } //end x
-	}   // end y	
-	
-}       // end convoluteImage
-
-
-void CatPictureApp::selectiveBlur(uint8_t* image_to_blur, uint8_t* blur_pattern){
-	//Convolution filters tend to overwrite the data that you need, so
-	// we keep a temporary copy of the image_to_blur. There are certainly
-	// more efficient ways to deal with this problem, but this is simple to
-	// understand. 
+	// copy the Surface into a new 1-d array
 	static uint8_t work_buffer[3*TextureSize*TextureSize];
 	//This memcpy is not much of a performance hit.
-	memcpy(work_buffer,image_to_blur,3*TextureSize*TextureSize);
+	memcpy(work_buffer, image_to_convolute , (3*TextureSize*TextureSize) );
 	
-	//These are used in right shifts.
-	//Both of these kernels actually darken as well as blur.
-	uint8_t kernelA[9] = 
-	  	//{1/9,1/9,1/9,
-		//1/9,1/9,1/9,
-		//1/9,1/9,1/9};
-		{1,1,1,
-		1,1,1,
-		1,1,1};
-	uint8_t kernelB[9] = 
-	  	//{4,3,4,
-		//4,2,4,
-		//4,3,4};
-		{1,1,1,
-		1,1,1,
-		1,1,1};
 	
-	uint8_t total_red  =0;
-	uint8_t total_green=0;
-	uint8_t total_blue =0;
-	int offset;
-	int k;
-	int y,x,ky,kx;
+	uint8_t kernel[9] = 
+		 {0,-1,0,
+		  -1,0,1,
+		  0,1,0};
 	
-	//Visit every pixel in the image, except the ones on the edge.
-	//TODO Special purpose logic to handle the edge cases
-	for( y=1;y<AppHeight-1;y++){
-		for( x=1;x<AppWidth-1;x++){
+		
+	uint8_t sum_red  =0;
+	uint8_t sum_green=0;
+	uint8_t sum_blue =0;
+
+	int offset, offset2;
+	int y, x, in_y, in_x, k;
+	
+	// outer loop to iterate across image
+	for( y=0; y<AppHeight-1; y++){
+		for( x=0; x<AppWidth-1; x++){
 			
 			offset = 3*(x + y*AppWidth);
-			if(blur_pattern[offset] < 256/3){
-				//Compute the convolution of the kernel with the region around the current pixel
-				//I use ints for the totals and the kernel to avoid overflow
-				total_red=0;
-				total_green=0;
-				total_blue=0;
-				for( ky=-1;ky<=1;ky++){
-					for( kx=-1;kx<=1;kx++){
-						offset = 3*(x + kx + (y+ky)*TextureSize);
-						k = kernelA[kx+1 + (ky+1)*3];
-						total_red   += (work_buffer[offset  ] >> k);
-						total_green += (work_buffer[offset+1] >> k);
-						total_blue  += (work_buffer[offset+2] >> k);
-					}
-				}
-			} else if(blur_pattern[offset] < 2*256/3){
-				//Compute the convolution of the kernel with the region around the current pixel
-				//I use ints for the totals and the kernel to avoid overflow
-				total_red=0;
-				total_green=0;
-				total_blue=0;
-				for( ky=-1;ky<=1;ky++){
-					for( kx=-1;kx<=1;kx++){
-						offset = 3*(x + kx + (y+ky)*TextureSize);
-						k = kernelB[kx+1 + (ky+1)*3];
-						total_red   += (work_buffer[offset  ] >> k);
-						total_green += (work_buffer[offset+1] >> k);
-						total_blue  += (work_buffer[offset+2] >> k);
-					}
-				}
-			} else {
-				offset = 3*(x + y*TextureSize);
-				total_red   = work_buffer[offset];
-				total_green = work_buffer[offset+1];
-				total_blue  = work_buffer[offset+2];
-			}
 			
+			    // have to do the kernal transform here
+				// each of the inner's go from -1 to 1, a 3x3 matrix is (-1,-1) in the upper left and (1,1) lower right
+				// this will create the new sum for only the one pixel it is over during this loop.
+				sum_red=0;
+				sum_green=0;
+				sum_blue=0;
+
+				// iterate thru the kernel, a 3x3 matrix
+				for( in_y=-1; in_y<=1; in_y++){					
+					for( in_x=-1; in_x<=1; in_x++){
+				
+						// create the offset for the kernel
+						// ex: if the pixel to be altered is (0,0) then on the first iteration its ( (0 + -1) + ((0 + -1) * 1024)) )
+						offset2 = 3*( (x + in_x) + ((y + in_y)*TextureSize) );
+						
+						//update the index of the kernel 
+						// this groovy little line will give us a number from 0-8, mult by 5 for a 5x5 kernel
+						k = kernel[in_x+1 + ((in_y+1)*3) ];
+
+						/** Basic convolution formula(s)
+						 sum +=  mask(Mcol, Mrow) * image(Rcol-Mcol, Rrow-Mrow)
+						 or
+						 y[i] += x[i - j] * h[j];    // convolve: multiply and accumulate
+						*/
+						sum_red   += (work_buffer[offset2  ] * k);
+						sum_green += (work_buffer[offset2+1] * k);
+						sum_blue  += (work_buffer[offset2+2] * k);
+						
+  	          } // end inner_x
+	      }     // end inner_y
+	// end convolution loop
+
+			
+			// Assign the complete sum to the single array pixel to create the new image
+            // sum -> result(Rcol, Rrow);	
 			offset = 3*(x + y*TextureSize);
-			image_to_blur[offset]   = total_red;
-			image_to_blur[offset+1] = total_green;
-			image_to_blur[offset+2] = total_blue;
-		}
-	}
-}
+			image_to_convolute[offset]   = sum_red   ;
+			image_to_convolute[offset+1] = sum_green ;
+			image_to_convolute[offset+2] = sum_blue  ;
 
 
-
-void CatPictureApp::drawRings(uint8_t* pixels, int center_x, int center_y, int r, Color8u c){
-	//Bounds test
-	if(r <= 0) return;
+	    } // end x
+	}     // end y	
 	
-	for(int y=center_y-r; y<=center_y+r; y++){
-		for(int x=center_x-r; x<=center_x+r; x++){
-			//Bounds test, to make sure we don't access array out of bounds
-			if(y < 0 || x < 0 || x >= AppWidth || y >= AppHeight) continue;
-			
-			int dist = (int)sqrt((double)((x-center_x)*(x-center_x) + (y-center_y)*(y-center_y)));
-			if(dist <= r){
-				if((dist/7)%2 == 1 ){
-					int offset = 3*(x + y*TextureSize);
-					//By blending the colors I get a semi-transparent effect
-					pixels[offset] = pixels[offset]/2 + c.r/2;
-					pixels[offset+1] = pixels[offset+1]/2 + c.g/2;
-					pixels[offset+2] = pixels[offset+2]/2 + c.b/2;
-				}
-			}
-		}
-	}
-}
-
-void CatPictureApp::drawAccident(uint8_t* pixels, int center_x, int center_y, int r, Color8u c){
-	//Bounds test
-	if(r <= 0) return;
-	
-	int r2 = r*r;
-	for(int y=center_y-r; y<=center_y+r; y++){
-		for(int x=center_x-r; x<=center_x+r; x++){
-			//Bounds test, to make sure we don't access array out of bounds
-			if(y < 0 || x < 0 || x >= AppWidth || y >= AppHeight) continue;
-			
-			int dist = (x-center_x)*(x-center_x) + (y-center_y)*(y-center_y);
-			if(dist <= r2){
-				if((dist/49)%2 == 0){
-					int offset = 3*(x + y*TextureSize);
-					pixels[offset] = c.r;
-					pixels[offset+1] = c.g;
-					pixels[offset+2] = c.b;
-				}
-			}
-		}
-	}
-}
+}         // end convoluteImage
 
 
 void CatPictureApp::tintOverlay(uint8_t* pixels, Color8u color)
@@ -548,14 +473,13 @@ void CatPictureApp::setup()
 				my_blur_pattern_[offset] = blur_data[offset];
 			}
 		}
-	
+	 // end convolution setup
 
 } //end setup
 
 
 void CatPictureApp::mouseDown( MouseEvent event )
 {
-
 	//Satisfies E.6, draws a line of random length, height and color at the mouse click
 	uint8_t* dataArray = (*mySurface_).getData();
 	int rndLength = Rand::randInt (0,400);
@@ -565,14 +489,13 @@ void CatPictureApp::mouseDown( MouseEvent event )
 	int y = event.getY();
 	drawLine (dataArray, x, y, rndLength, rndHeight);
 
-
 }
 
 
 void CatPictureApp::update()
 {
 	//  Get our array of pixel information
-	/// see notes [C]
+	// see notes [C]
 	uint8_t* dataArray = (*mySurface_).getData();
 		
 		
@@ -584,38 +507,35 @@ void CatPictureApp::update()
 	
 
 	// makeLine call
-	makeLine (dataArray, 100, 190, 100, 100, Color8u(0, 255, 0) );
-	makeLine (dataArray, 410, 100, 600, 100, Color8u(0, 255, 0) );
+	//int x0, int y0, int x1, int y1, Color8u c
+	makeLine (dataArray, 100, 100, 190, 100, Color8u(0, 255, 0) );
+	makeLine (dataArray, 410, 100, 500, 100, Color8u(0, 255, 0) );
+
 
 	//tintOverlay call 
 	tintOverlay(dataArray, Color8u(0, 255, 0));
 
 	
-
-	
 	//drawRectangle call
-	//(uint8_t* pixels, int x_width, int y_height, int x_origin, int y_origin, Color8u c);
+	//(uint8_t* pixels, int x_width, int y_height, int x_origin, int y_origin, Color8u c)
 	drawRectangle (dataArray, 200, 200, 200, 100, Color8u(0, 255, 0) );
+
 
 	//copyRectangle call
 	// 100, 100 for x & y_width will copy just a subset of the above rectangle
-	//(uint8_t* pixels, int x_width, int y_height, int x_origin, int y_origin, Color8u c);
-	copyRectangle(dataArray, 200, 200, 200, 350, 100, Color8u(255, 255, 255) );
+	// if y_height=200 then it will also copy the pixels of the random line
+	//(uint8_t* pixels, int x_width, int y_height, int x_origin, int y_origin, Color8u c)
+	copyRectangle(dataArray, 200, 100, 200, 350, 100, Color8u(255, 255, 255) );
 
 
 	// drawTriangle call
-	drawTriangle (dataArray, 50, 300, 20, Color8u(0, 0, 255) );
+	drawTriangle (dataArray, 75, 300, 20, Color8u(0, 0, 255) );
 	
 
-	// Convolution call
-	// convoluteImage(dataArray );
+	 // Convolution call
+	  convoluteImage(dataArray);
 
-
-	//With just this method called, frame rate drops from 54 to 11.93
-	//selectiveBlur(dataArray, my_blur_pattern_);
 	
-	
-	//
 	// End calls
 	
 	
