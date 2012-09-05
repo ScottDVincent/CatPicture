@@ -56,34 +56,8 @@ class CatPictureApp : public AppBasic {
 	static const int AppHeight=600;
 	static const int TextureSize=1024; //Must be the next power of 2 bigger or equal to app dimensions
 	
-	uint8_t* my_blur_pattern_;
-
-	/**
-	 * Blur one image, using another as a template.
-	 *
-	 * Blur the image_to_blur using a standard convolution blur, but the strength of the blur depends on the blur_pattern.
-	 * Pixels are fulling blurred if they are black not blurred at all if they are white. Both images must be exactly the
-	 * same size as the app window.
-	 *
-	 * This satisfies the "blur" requirement, goal B.1
-	 */
-	void selectiveBlur(uint8_t* image_to_blur, uint8_t* blur_pattern);
+		
 	
-	
-	/**
-	 * Draw concentric circles, each of width 7, until reaching r.
-	 *
-	 * This satisfies the "circle" requirement, goal A.2 and "transparency" (E.2)
-	 */
-	void drawRings(uint8_t* pixels, int x, int y, int r, Color8u c);
-	
-	/**
-	 * This was the original version of drawRings, which was buggy, but looked cool,
-	 * so I kept it.
-	 */
-	void drawAccident(uint8_t* pixels, int x, int y, int r, Color8u c);
-
-
 	/**
 	* This method draws a line across the top of the screen
 	* pixels: the Surface array
@@ -369,7 +343,7 @@ void CatPictureApp::convoluteImage ( uint8_t* image_to_convolute) {
 	//This memcpy is not much of a performance hit.
 	memcpy(work_buffer, image_to_convolute , (3*TextureSize*TextureSize) );
 	
-	
+	// edge diagonal kernel
 	uint8_t kernel[9] = 
 		 {0,-1,0,
 		  -1,0,1,
@@ -392,6 +366,7 @@ void CatPictureApp::convoluteImage ( uint8_t* image_to_convolute) {
 			    // have to do the kernal transform here
 				// each of the inner's go from -1 to 1, a 3x3 matrix is (-1,-1) in the upper left and (1,1) lower right
 				// this will create the new sum for only the one pixel it is over during this loop.
+			    // must re-initialize to zero on each new pass over the next pixel
 				sum_red=0;
 				sum_green=0;
 				sum_blue=0;
@@ -410,8 +385,6 @@ void CatPictureApp::convoluteImage ( uint8_t* image_to_convolute) {
 
 						/** Basic convolution formula(s)
 						 sum +=  mask(Mcol, Mrow) * image(Rcol-Mcol, Rrow-Mrow)
-						 or
-						 y[i] += x[i - j] * h[j];    // convolve: multiply and accumulate
 						*/
 						sum_red   += (work_buffer[offset2  ] * k);
 						sum_green += (work_buffer[offset2+1] * k);
@@ -454,27 +427,7 @@ void CatPictureApp::setup()
 	
 	//This is the setup that everyone needs to do
 	mySurface_ = new Surface(TextureSize,TextureSize,false);
-
-	
-	///Setup for my convolution function
-		//load image into a Surface
-		Surface yose_picture(loadImage( loadResource(RES_YOSE) ));
-
-		// declare the address of the image data
-		uint8_t* blur_data = yose_picture.getData();	
-
-		// make a new array the size of the image
-		my_blur_pattern_ = new uint8_t[AppWidth*AppHeight*3];
-	
-		// make a copy of the ram locales of the image into the new array
-		for(int y=0;y<AppHeight;y++){
-			for(int x=0;x<AppWidth;x++){
-				int offset = 3*(x + y*AppWidth);
-				my_blur_pattern_[offset] = blur_data[offset];
-			}
-		}
-	 // end convolution setup
-
+		
 } //end setup
 
 
@@ -533,7 +486,7 @@ void CatPictureApp::update()
 	
 
 	 // Convolution call
-	  convoluteImage(dataArray);
+	 // convoluteImage(dataArray);
 
 	
 	// End calls
