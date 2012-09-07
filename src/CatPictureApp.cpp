@@ -13,8 +13,7 @@
  *
  *
  * @note This project satisfies goals 
- *	A.1 (rectangle), A.3 (line), 
- *  B.1 (blur), 
+ *	A.1 (rectangle), A.3 (line), A.5 (copy) (.5), A.7 (triangle)(.5)
  *  E.2 (transparency),  E.5 (animation) and E.6 (mouse interaction)
  */
 
@@ -37,27 +36,27 @@ class CatPictureApp : public AppBasic {
 	void update();
 	void draw();
 	void prepareSettings(Settings* settings);
-	
+
   private:
 	Surface* mySurface_; //The Surface object whose pixel array we will modify
-	Surface yose_pic;
-	
+	//Surface yose_pic;  // It doesn't look like this is necessary...
+
 
 	//integer for random color
     int rndColor;
-	
+
 	//Track how many frames we have shown, for animation purposes
 	int frame_number_;
 	boost::posix_time::ptime app_start_time_;
-	
-				
+
+
 	//Width and height of the screen
 	static const int AppWidth=800;
 	static const int AppHeight=600;
 	static const int TextureSize=1024; //Must be the next power of 2 bigger or equal to app dimensions
-	
-		
-	
+
+
+
 	/**
 	* This method draws a line across the top of the screen
 	* pixels: the Surface array
@@ -107,8 +106,8 @@ class CatPictureApp : public AppBasic {
 	*
 	*/
 	void drawTriangle (uint8_t* pixels, int side_length, int pt_x, int pt_y, Color8u c );
-	
-	
+
+
 	/**
 	** This method draws a line 
 	*
@@ -122,9 +121,9 @@ class CatPictureApp : public AppBasic {
 	* This satisfies requirement A.3 (line). 
 	*/
 	void makeLine ( uint8_t* pixels, int x0, int y0, int x1, int y1, Color8u c);
-	
 
-	
+
+
 	/**
 	* This method overlays a color over the entire surface and updates it throughout a loop
 	*
@@ -139,7 +138,7 @@ class CatPictureApp : public AppBasic {
 	* It's pretty lame and probably won't satisfy B.4
 	*/
 	void convoluteImage (uint8_t* pixels);
-	
+
 
 }; // end public AppBasic
 
@@ -151,7 +150,7 @@ void CatPictureApp::prepareSettings(Settings* settings){
 
 
 
-/// This method  draws a random colored line at the top of the screen
+/// This method  draws a randomly colored line at the top of the screen
 void CatPictureApp::drawLine(uint8_t* pixels, int x_start, int y_start, int line_width, int line_height){
 
 	rndColor = Rand::randInt (0,255);
@@ -164,7 +163,7 @@ void CatPictureApp::drawLine(uint8_t* pixels, int x_start, int y_start, int line
 			pixels [3* (x + y*(TextureSize))  ] = rndColor;
 			pixels [3* (x + y*(TextureSize))+1] = rndColor;
 			pixels [3* (x + y*(TextureSize))+2] = rndColor;
-			
+
 			} // end x	
 		}	  // end y
 	}		  // end if
@@ -188,7 +187,7 @@ void CatPictureApp::drawRectangle(uint8_t* pixels, int x_width, int y_height, in
 
 
 	if ( (x_width < AppWidth) && (y_height < AppHeight) ){
-		
+
 		// start at y_origin
 		for ( int y = y_origin; y <= (y_height); y++ ){
 			for ( int  x = x_origin; x <= (x_origin + x_width); x++ ) {
@@ -209,7 +208,7 @@ void CatPictureApp::copyRectangle(uint8_t* pixels, int x_width, int y_height, in
 	int y_offset = (y_origin - y_original_rect);
 
 	if ( (x_width < AppWidth) && ( (y_height + y_origin) < AppHeight) ){
-		
+
 		for ( int y = y_origin; y <= (y_height + y_origin); y++ ){
 
 			for ( int x = x_origin; x <= (x_origin + x_width); x++ ) {						
@@ -217,15 +216,20 @@ void CatPictureApp::copyRectangle(uint8_t* pixels, int x_width, int y_height, in
 				pixels [3* (x + y*TextureSize)+1] = pixels [3* (x + (y - y_offset)*TextureSize) +1]/2 + c.g/2;
 				pixels [3* (x + y*TextureSize)+2] = pixels [3* (x + (y - y_offset)*TextureSize) +2]/2 + c.b/2;
 					} // end x
-				
+
 				}	  // end y
-	
+
 	}				  // end if
 
 }
 
 
-/// This method draws a triangle when gizen the side length
+/// This method draws a triangle when given the side length
+/* The assignment sheet actually says this is supposed to make a triangle when given
+three points for the corners. The only way I can think to do this is by drawing a 
+line segment between each of the points, or by using the distance formula to calculate
+the side length before using your method.
+*/
 void CatPictureApp::drawTriangle (uint8_t* pixels, int side_length, int pt_x, int pt_y, Color8u c){
 
 	// bounds checking 
@@ -234,7 +238,7 @@ void CatPictureApp::drawTriangle (uint8_t* pixels, int side_length, int pt_x, in
 	//for (int tri = 0; tri <= 2; tri++){
 		int x = pt_x;
 		int y = pt_y;
-		
+
 		//move one: go right, x+1, y+1
 		for ( int m1 = 0; m1 <= side_length; m1++ ){
 				pixels [3* (x + (y * TextureSize))  ] = c.r;
@@ -270,10 +274,11 @@ void CatPictureApp::drawTriangle (uint8_t* pixels, int side_length, int pt_x, in
 	//*/
 } // end drawTriangle
 
-
-
+/* Looks like this doesn't work quite right. It only draws a line if the y0 and
+y1 values are the same.
+*/
 void CatPictureApp::makeLine ( uint8_t* pixels, int x0, int y0, int x1, int y1, Color8u c ){ 
-								
+
 	 int     x = 0, offset;       
 	 float   dy, dx, y, m;  // need float to get a fractional value 
 
@@ -285,7 +290,7 @@ void CatPictureApp::makeLine ( uint8_t* pixels, int x0, int y0, int x1, int y1, 
 
 
 			    // iterate and draw
-			    //if (x1 > x0) {
+			    if (x1 > x0) {
 				for ( x = x0; x <= x1; x++ ) {
 				offset = 3 * (x + (y * TextureSize)); 
      
@@ -294,14 +299,17 @@ void CatPictureApp::makeLine ( uint8_t* pixels, int x0, int y0, int x1, int y1, 
 				 pixels [offset +2]= c.b; 
       
 				 y += m;   //* Step y by slope m 
-				 
+
 				} // end for loop
+
 				
-				/**
 				// this is code to try and draw the line if it's going from right to left
 				} else {
 				
-				    for ( x = x1; x <= x0; x-- ) {
+				    for ( x = x1; x <= x0; x++ ) {   /* Your issue here is that this code figured out 
+													 which one was on the left, then tried to draw to the 
+													 left. I just made it x++ instead of x-- and it works now.
+													 */
 					offset = 3 * (x + (y * TextureSize)); 
      
 					 pixels [offset  ]=  c.r;
@@ -312,13 +320,16 @@ void CatPictureApp::makeLine ( uint8_t* pixels, int x0, int y0, int x1, int y1, 
 				
 					}// end for loop
 			}
-			*/
+			
 
 }	// end makeLine
 
-
+/*I really wish I could actually help with this convolution, but I couldn't
+figure out how to make mine work, and it looks like we had some of the same
+issues.
+*/
 void CatPictureApp::convoluteImage ( uint8_t* image_to_convolute) {
-	
+
 	/**
 	// create a new Surface
 	Surface cloneSurface = Surface (TextureSize, TextureSize, false);
@@ -332,7 +343,9 @@ void CatPictureApp::convoluteImage ( uint8_t* image_to_convolute) {
 	(1)Bo Brinkman
 
 	(2)www.sussex.ac.uk/Users/davidy/teachvision/vision2.html
-	The location of (0, 0) (i.e. column 0, row 0) in the mask is important: during convolution, each result will be placed in the output array at the location corresponding to the pixel lying under the (0, 0) mask element in the input array
+	The location of (0, 0) (i.e. column 0, row 0) in the mask is important: during convolution, each result 
+	will be placed in the output array at the location corresponding to the pixel lying under the (0, 0) mask 
+	element in the input array
 	
 	(3)songho.ca/dsp/convolution/convolution2d_example.html
 	*/
@@ -342,27 +355,27 @@ void CatPictureApp::convoluteImage ( uint8_t* image_to_convolute) {
 	static uint8_t work_buffer[3*TextureSize*TextureSize];
 	//This memcpy is not much of a performance hit.
 	memcpy(work_buffer, image_to_convolute , (3*TextureSize*TextureSize) );
-	
+
 	// edge diagonal kernel
 	uint8_t kernel[9] = 
 		 {0,-1,0,
 		  -1,0,1,
 		  0,1,0};
-	
-		
+
+
 	uint8_t sum_red  =0;
 	uint8_t sum_green=0;
 	uint8_t sum_blue =0;
 
 	int offset, offset2;
 	int y, x, in_y, in_x, k;
-	
+
 	// outer loop to iterate across image
 	for( y=0; y<AppHeight-1; y++){
 		for( x=0; x<AppWidth-1; x++){
-			
+
 			offset = 3*(x + y*AppWidth);
-			
+
 			    // have to do the kernal transform here
 				// each of the inner's go from -1 to 1, a 3x3 matrix is (-1,-1) in the upper left and (1,1) lower right
 				// this will create the new sum for only the one pixel it is over during this loop.
@@ -374,11 +387,11 @@ void CatPictureApp::convoluteImage ( uint8_t* image_to_convolute) {
 				// iterate thru the kernel, a 3x3 matrix
 				for( in_y=-1; in_y<=1; in_y++){					
 					for( in_x=-1; in_x<=1; in_x++){
-				
+
 						// create the offset for the kernel
 						// ex: if the pixel to be altered is (0,0) then on the first iteration its ( (0 + -1) + ((0 + -1) * 1024)) )
 						offset2 = 3*( (x + in_x) + ((y + in_y)*TextureSize) );
-						
+
 						//update the index of the kernel 
 						// this groovy little line will give us a number from 0-8, mult by 5 for a 5x5 kernel
 						k = kernel[in_x+1 + ((in_y+1)*3) ];
@@ -389,12 +402,12 @@ void CatPictureApp::convoluteImage ( uint8_t* image_to_convolute) {
 						sum_red   += (work_buffer[offset2  ] * k);
 						sum_green += (work_buffer[offset2+1] * k);
 						sum_blue  += (work_buffer[offset2+2] * k);
-						
+
   	          } // end inner_x
 	      }     // end inner_y
 	// end convolution loop
 
-			
+
 			// Assign the complete sum to the single array pixel to create the new image
             // sum -> result(Rcol, Rrow);	
 			offset = 3*(x + y*TextureSize);
@@ -405,9 +418,13 @@ void CatPictureApp::convoluteImage ( uint8_t* image_to_convolute) {
 
 	    } // end x
 	}     // end y	
-	
+
 }         // end convoluteImage
 
+/* Not quite a tint...? This code just sets the color for your background,
+and I don't think that the tint was supposed to fade. If I were the prof, 
+I'd probably grade this as mislabelled or not quite right, but almost.
+*/
 
 void CatPictureApp::tintOverlay(uint8_t* pixels, Color8u color)
 {	for(int y = 0; y < AppHeight; y++){
@@ -421,23 +438,38 @@ void CatPictureApp::tintOverlay(uint8_t* pixels, Color8u color)
 	}
 }
 
+
+// This is what I did for my tint method
+/*void CatPictureApp::tintOverlay(uint8_t* pixels, Color8u color){
+	for(int y = 0; y < AppHeight; y++){
+		for(int x = 0; x < AppWidth; x++){	
+			pixels[3*(x + y*TextureSize)]   = color.r;	
+			pixels[3*(x + y*TextureSize)+1] = color.g;	
+			pixels[3*(x + y*TextureSize)+2] = color.b;
+		}
+	}
+}*/
+
 void CatPictureApp::setup()
 {
 	frame_number_=0;
-	
+
 	//This is the setup that everyone needs to do
 	mySurface_ = new Surface(TextureSize,TextureSize,false);
-		
+
 } //end setup
 
-
+/* For some reason when I tested this, it only worked on the left side of the
+image and about 1/4 the number of times that I actually clicked. I don't see
+any logical reason for this in your code, though.
+*/
 void CatPictureApp::mouseDown( MouseEvent event )
 {
 	//Satisfies E.6, draws a line of random length, height and color at the mouse click
 	uint8_t* dataArray = (*mySurface_).getData();
 	int rndLength = Rand::randInt (0,400);
 	int rndHeight = Rand::randInt (0,6);
-		
+
 	int x = event.getX();
 	int y = event.getY();
 	drawLine (dataArray, x, y, rndLength, rndHeight);
@@ -450,14 +482,14 @@ void CatPictureApp::update()
 	//  Get our array of pixel information
 	// see notes [C]
 	uint8_t* dataArray = (*mySurface_).getData();
-		
-		
-	/// make drawing calls ///
 	
+
+	/// make drawing calls ///
+
 	// drawLine method
 	// int x_start, int y_start, int line_width, int line_height
 	drawLine (dataArray, 200, 250, 400, 2);
-	
+
 
 	// makeLine call
 	//int x0, int y0, int x1, int y1, Color8u c
@@ -468,7 +500,7 @@ void CatPictureApp::update()
 	//tintOverlay call 
 	tintOverlay(dataArray, Color8u(0, 255, 0));
 
-	
+
 	//drawRectangle call
 	//(uint8_t* pixels, int x_width, int y_height, int x_origin, int y_origin, Color8u c)
 	drawRectangle (dataArray, 200, 200, 200, 100, Color8u(0, 255, 0) );
@@ -483,18 +515,18 @@ void CatPictureApp::update()
 
 	// drawTriangle call
 	drawTriangle (dataArray, 75, 300, 20, Color8u(0, 0, 255) );
-	
+
 
 	 // Convolution call
 	 // convoluteImage(dataArray);
 
-	
+
 	// End calls
 	
-	
-	
+
+
 	/// interesting stuff from prof ///
-	
+
 	//Only save the first frame of drawing as output
 	if(frame_number_ == 0){
 		writeImage("vincensd.png",*mySurface_);
@@ -503,7 +535,7 @@ void CatPictureApp::update()
 	}
 	//keeps track of how many frames we have shown.
 	frame_number_++;
-	
+
 	//For debugging: Print the actual frames per second
 	boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time();
 	boost::posix_time::time_duration msdiff = now - app_start_time_;
@@ -516,7 +548,7 @@ void CatPictureApp::draw()
 	//Draw our texture to the screen, using graphics library
 	gl::draw(*mySurface_);
 
-		
+
 }
 
 CINDER_APP_BASIC( CatPictureApp , RendererGl )
